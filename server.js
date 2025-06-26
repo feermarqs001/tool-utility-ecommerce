@@ -6,7 +6,6 @@ const path = require('path');
 const flash = require('connect-flash');
 require('dotenv').config();
 
-// --- IMPORTAÇÃO DO MERCADO PAGO ---
 const { MercadoPagoConfig } = require('mercadopago');
 
 // Importações das Rotas
@@ -25,37 +24,36 @@ const startServer = async () => {
         });
         console.log("✅ Conexão com o MongoDB estabelecida com sucesso!");
 
-        // ==========================================================
-        // --- TESTE DE DIAGNÓSTICO DO ACCESS TOKEN ---
-        // Vamos imprimir o token que o Node.js está lendo do .env
-        console.log('--- DEBUG: TENTANDO USAR O ACCESS TOKEN ABAIXO ---');
-        console.log(`'${process.env.MP_ACCESS_TOKEN}'`);
-        console.log('----------------------------------------------------');
-        // ==========================================================
-
         const app = express();
 
-        // --- CONFIGURAÇÃO DO CLIENTE MERCADO PAGO ---
         const mpClient = new MercadoPagoConfig({
             accessToken: process.env.MP_ACCESS_TOKEN,
             options: { timeout: 5000 }
         });
-        // Disponibiliza o cliente para todas as rotas da aplicação
         app.set('mpClient', mpClient);
-        // --- FIM DA CONFIGURAÇÃO ---
 
         app.set('view engine', 'ejs');
         app.set('views', path.join(__dirname, 'views'));
         app.use(express.static(path.join(__dirname, 'public')));
         app.use(express.json());
         app.use(express.urlencoded({ extended: true }));
+
+        // ==========================================================
+        // --- ATUALIZAÇÃO DE SEGURANÇA APLICADA AQUI ---
+        // ==========================================================
         app.use(session({
             secret: process.env.SESSION_SECRET,
             resave: false,
             saveUninitialized: false,
             store: MongoStore.create({ mongoUrl: process.env.MONGO_URI }),
-            cookie: { maxAge: 1000 * 60 * 60 * 24 }
+            cookie: { 
+                maxAge: 1000 * 60 * 60 * 24, // 1 dia
+                httpOnly: true, // Impede que o cookie seja acedido por scripts do lado do cliente
+                secure: process.env.NODE_ENV === 'production' // Garante que o cookie só é enviado em HTTPS
+            }
         }));
+        // ==========================================================
+
         app.use(flash());
         app.use((req, res, next) => {
             res.locals.isAuthenticated = req.session.isAuthenticated || false;
