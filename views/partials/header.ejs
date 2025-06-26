@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ToolUtility - <%= pageTitle %></title>
-
     <link rel="stylesheet" href="/css/style.css">
-
-    </head>
+</head>
 <body>
 
     <header class="main-header">
@@ -43,8 +41,12 @@
         <nav class="main-nav">
             <% if (locals.isAuthenticated) { %>
                 <div class="nav-user-info"><strong>Olá, <%= locals.userName %></strong></div>
-                <a href="/minha-conta">Minha Conta</a>
-                <a href="/meus-pedidos">Meus Pedidos</a>
+                <!-- =============================================== -->
+                <!-- =========== CORREÇÃO APLICADA AQUI ============ -->
+                <!-- =============================================== -->
+                <a href="/account">Minha Conta</a>
+                <a href="/account/orders">Meus Pedidos</a>
+                <!-- =============================================== -->
                 <hr>
             <% } %>
             <a href="/">Início</a>
