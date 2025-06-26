@@ -1,0 +1,63 @@
+<%- include('../partials/header', { pageTitle: pageTitle }) %>
+
+<style>
+    .orders-container {
+        max-width: 1000px;
+        margin: 40px auto;
+    }
+    .orders-container h1 {
+        margin-bottom: 30px;
+    }
+    .order-card {
+        background-color: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+    .order-header {
+        background-color: #f8f9fa;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.9em;
+        border-bottom: 1px solid #e9ecef;
+    }
+    .order-header > div {
+        flex: 1;
+        padding: 0 10px;
+    }
+</style>
+
+<div class="container orders-container">
+    <h1>Os Meus Pedidos</h1>
+
+    <% if (orders && orders.length > 0) { %>
+        <% orders.forEach(order => { %>
+            <div class="order-card">
+                <div class="order-header">
+                    <div>
+                        <strong>Pedido:</strong> #<%= order._id.toString().slice(-8) %>
+                    </div>
+                    <div>
+                        <strong>Data:</strong> <%= new Date(order.createdAt).toLocaleDateString('pt-BR') %>
+                    </div>
+                    <div>
+                        <strong>Total:</strong> R$ <%= order.totalAmount.toFixed(2).replace('.', ',') %>
+                    </div>
+                    <div>
+                        <strong>Status:</strong> <%= order.status %>
+                    </div>
+                </div>
+            </div>
+        <% }); %>
+    <% } else { %>
+        <div class="alert alert-info">
+            Você ainda não fez nenhum pedido.
+        </div>
+    <% } %>
+    
+    <a href="/account" class="btn btn-secondary mt-3">Voltar para a Minha Conta</a>
+</div>
+
+<%- include('../partials/footer') %>

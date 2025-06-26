@@ -1,0 +1,106 @@
+<%- include('../partials/header', { pageTitle: pageTitle }) %>
+
+<style>
+    .account-container {
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 30px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+    .account-container h1 {
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #eee;
+    }
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    .form-group label {
+        display: block;
+        margin-bottom: .5rem;
+        font-weight: 600;
+    }
+    .form-control {
+        display: block;
+        width: 100%;
+        padding: .75rem 1rem;
+        font-size: 1rem;
+        line-height: 1.5;
+        color: #495057;
+        background-color: #fff;
+        background-clip: padding-box;
+        border: 1px solid #ced4da;
+        border-radius: .25rem;
+        transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+    }
+    .btn-primary {
+        color: #fff;
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        padding: 10px 25px;
+        cursor: pointer;
+    }
+    .account-links {
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #eee;
+    }
+</style>
+
+<div class="container">
+    <div class="account-container">
+        <h1>Minha Conta</h1>
+
+        <form action="/account" method="POST">
+            <h4>Os seus Dados</h4>
+            <div class="form-group">
+                <label for="name">Nome Completo</label>
+                <input type="text" id="name" name="name" class="form-control" value="<%= user.name %>" required>
+            </div>
+            <div class="form-group">
+                <label for="email">E-mail</label>
+                <input type="email" id="email" name="email" class="form-control" value="<%= user.email %>" required>
+            </div>
+            
+            <h4 class="mt-5">Endereço de Entrega</h4>
+            <div class="row">
+                <div class="col-md-8 form-group">
+                    <label for="street">Rua / Avenida</label>
+                    <input type="text" id="street" name="street" class="form-control" value="<%= user.address ? user.address.street : '' %>">
+                </div>
+                <div class="col-md-4 form-group">
+                    <label for="number">Número</label>
+                    <input type="text" id="number" name="number" class="form-control" value="<%= user.address ? user.address.number : '' %>">
+                </div>
+            </div>
+             <div class="form-group">
+                <label for="neighborhood">Bairro</label>
+                <input type="text" id="neighborhood" name="neighborhood" class="form-control" value="<%= user.address ? user.address.neighborhood : '' %>">
+            </div>
+            <div class="row">
+                 <div class="col-md-8 form-group">
+                    <label for="city">Cidade</label>
+                    <input type="text" id="city" name="city" class="form-control" value="<%= user.address ? user.address.city : '' %>">
+                </div>
+                <div class="col-md-4 form-group">
+                    <label for="state">Estado</label>
+                    <input type="text" id="state" name="state" class="form-control" value="<%= user.address ? user.address.state : '' %>">
+                </div>
+            </div>
+             <div class="form-group">
+                <label for="zipCode">CEP</label>
+                <input type="text" id="zipCode" name="zipCode" class="form-control" value="<%= user.address ? user.address.zipCode : '' %>">
+            </div>
+
+            <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+        </form>
+
+        <div class="account-links">
+            <a href="/account/orders" class="btn btn-secondary">Ver os Meus Pedidos</a>
+        </div>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>
