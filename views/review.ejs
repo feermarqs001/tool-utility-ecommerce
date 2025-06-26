@@ -1,116 +1,73 @@
-<%- include('partials/header', { pageTitle: pageTitle }) %>
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revisar Pedido - Tool Utility</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <%- include('partials/header') %>
 
-<style>
-    body { background-color: #f8f9fa; }
-    .checkout-container { max-width: 1200px; margin: auto; }
-    .product-card { display: flex; align-items: center; background-color: #fff; border: 1px solid #dee2e6; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem; }
-    .product-image { flex-shrink: 0; width: 100px; margin-right: 1.5rem; }
-    .product-image img { width: 100px; height: 100px; object-fit: cover; border-radius: 0.25rem; border: 1px solid #eee; }
-    .product-details { flex-grow: 1; }
-    .product-title { font-weight: 600; font-size: 1.1em; color: #333; text-decoration: none; display: block; margin-bottom: 0.25rem; }
-    .product-title:hover { color: #0056b3; }
-    .product-price { flex-shrink: 0; width: 120px; text-align: right; font-size: 1.2em; font-weight: bold; }
-    .summary-card { background-color: #fff; border: 1px solid #dee2e6; border-radius: 0.5rem; padding: 1.5rem; position: sticky; top: 20px; }
-    .summary-card h4 { margin-bottom: 1.5rem; }
-    .summary-line { display: flex; justify-content: space-between; margin-bottom: 0.75rem; font-size: 1.05em; }
-    .summary-total { font-size: 1.4em; font-weight: bold; padding-top: 1rem; border-top: 1px solid #eee; }
-    /* Estilo para o novo botão */
-    .btn-mercadopago { background-color: #009ee3; border-color: #009ee3; color: #fff; }
-    .btn-mercadopago:hover { background-color: #0087c9; border-color: #0087c9; }
-</style>
-
-<div class="container checkout-container mt-5 mb-5">
-    <div class="text-center mb-5">
-        <h2>Finalize seu Pedido</h2>
-        <p class="lead">Revise os itens e o endereço antes de concluir a compra.</p>
-    </div>
-
-    <div class="row">
-        <div class="col-lg-8">
-            <h4>Seu Carrinho</h4>
-            <hr class="mb-4">
-
-            <% if (cart && cart.length > 0) { %>
-                <% cart.forEach(function(item) { %>
-                    <div class="product-card">
-                        <div class="product-image">
-                            <a href="/product/<%= item.product._id %>"> 
-                                <img src="<%= item.product.thumbnailUrl %>" alt="<%= item.product.name %>">
-                            </a>
-                        </div>
-                        <div class="product-details">
-                            <a href="/product/<%= item.product._id %>" class="product-title"><%= item.product.name %></a>
-                            <p class="text-muted mb-1">Quantidade: <%= item.quantity %></p>
-                        </div>
-                        <div class="product-price">
-                            <% 
-                                const price = (item.product.onSale && item.product.salePrice) ? item.product.salePrice : item.product.price;
-                                const itemTotal = price * item.quantity;
-                            %>
-                            <strong>R$ <%= itemTotal.toFixed(2).replace('.', ',') %></strong>
-                        </div>
-                    </div>
-                <% }); %>
-            <% } else { %>
-                <div class="alert alert-warning">Seu carrinho está vazio.</div>
-            <% } %>
-        </div>
-
-        <div class="col-lg-4">
-            <div class="summary-card">
-                <h4>Resumo do Pedido</h4>
-
-                <div class="summary-line">
-                    <span>Subtotal</span>
-                    <span>R$ <%= subtotal.toFixed(2).replace('.', ',') %></span>
-                </div>
-
-                <% if (discount > 0) { %>
-                    <div class="summary-line text-success">
-                        <span>Desconto</span>
-                        <span>- R$ <%= discount.toFixed(2).replace('.', ',') %></span>
-                    </div>
-                <% } %>
-                
-                <div class="summary-line">
-                    <span>Frete</span>
-                    <span class="text-success fw-bold">Grátis</span>
-                </div>
-
-                <hr>
-
-                <div class="summary-line summary-total">
-                    <span>Total</span>
-                    <span>R$ <%= total.toFixed(2).replace('.', ',') %></span>
-                </div>
-                
-                <% if (user && user.address && user.address.street) { %>
-                    <div class="mt-4">
-                        <h6>Entregar em:</h6>
-                        <p class="text-muted" style="font-size: 0.95em;">
+    <main class="container">
+        <div class="form-page-container" style="max-width: 800px;">
+            <h1>Revisar e Finalizar Pedido</h1>
+            <%- include('partials/flash-messages') %>
+            
+            <div class="review-layout">
+                <div class="box">
+                    <h2>Endereço de Entrega</h2>
+                    <% if (user.address && user.address.street) { %>
+                        <p>
+                            <strong><%= user.name %></strong><br>
                             <%= user.address.street %>, <%= user.address.number %><br>
-                            <%= user.address.city %> - <%= user.address.state %>, <%= user.address.zipCode %><br>
-                            <a href="/account" class="small">Alterar endereço</a>
+                            <%= user.address.complement ? user.address.complement + '<br>' : '' %>
+                            <%= user.address.neighborhood %>, <%= user.address.city %> - <%= user.address.state %><br>
+                            CEP: <%= user.address.zipCode %>
+                        </p>
+                        <a href="/account" style="font-size: 0.9em;">Editar endereço</a>
+                    <% } else { %>
+                        <p>Nenhum endereço de entrega cadastrado.</p>
+                        <a href="/account" class="btn">Cadastrar Endereço</a>
+                    <% } %>
+
+                    <h2 style="margin-top: 30px;">Itens do Pedido</h2>
+                    <% cart.forEach(item => { %>
+                        <p>
+                            <%= item.quantity %>x <%= item.name %>
+                            <span>R$ <%= (item.price * item.quantity).toFixed(2) %></span>
+                        </p>
+                    <% }) %>
+                </div>
+
+                <div class="box">
+                    <h2>Resumo do Pedido</h2>
+                    <div class="financial-summary">
+                        <p>
+                            <span>Subtotal:</span>
+                            <span>R$ <%= subtotal.toFixed(2) %></span>
+                        </p>
+                        <% if (discount && discount.amount > 0) { %>
+                            <p class="discount">
+                                <span>Desconto (<%= discount.code %>):</span>
+                                <span>- R$ <%= discount.amount.toFixed(2) %></span>
+                            </p>
+                        <% } %>
+                        <hr style="margin: 10px 0;">
+                        <p class="total-line" style="font-size: 1.2em;">
+                            <strong>Total a Pagar:</strong>
+                            <strong>R$ <%= total.toFixed(2) %></strong>
                         </p>
                     </div>
 
-                    <form action="/checkout/create-payment-preference" method="POST" class="mt-4">
-                        <button type="submit" class="btn btn-mercadopago btn-lg w-100 d-flex align-items-center justify-content-center">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 10px;">
-                                <path d="M19.366 3.63374C15.345 -0.38726 8.655 -0.38726 4.634 3.63374C0.613 7.65474 0.613 14.3447 4.634 18.3657C8.655 22.3867 15.345 22.3867 19.366 18.3657C23.387 14.3447 23.387 7.65474 19.366 3.63374ZM10.596 15.8677H7.72V8.13174H10.596V10.2397H10.548C11.166 8.87074 12.396 8.13174 13.811 8.13174C15.918 8.13174 16.536 9.49974 16.536 11.4397V15.8677H13.66V11.8677C13.66 10.8997 13.276 10.2397 12.396 10.2397C11.468 10.2397 10.596 10.8997 10.596 11.8677V15.8677Z" fill="white"/>
-                            </svg>
-                            <span>Pagar com Mercado Pago</span>
-                        </button>
+                    <form action="/checkout/create-payment-preference" method="POST" style="margin-top: 20px;">
+                        <button type="submit" class="btn">Finalizar Compra e Pagar</button>
                     </form>
-                    
-                <% } else { %>
-                    <div class="alert alert-info mt-4">
-                        <a href="/account"><strong>Cadastre um endereço</strong></a> para finalizar a compra.
-                    </div>
-                <% } %>
+                </div>
             </div>
         </div>
-    </div>
-</div>
+    </main>
 
-<%- include('partials/footer') %>
+    <%- include('partials/footer') %>
+</body>
+</html>
