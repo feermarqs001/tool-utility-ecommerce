@@ -17,22 +17,23 @@ const accountRoutes = require('./routes/account');
 
 const startServer = async () => {
     try {
+        // --- CONEXÃO COM O MONGODB COM OPÇÕES MAIS ROBUSTAS PARA PRODUÇÃO ---
+        console.log("Tentando conectar ao MongoDB Atlas...");
+        console.log(`Usando MONGO_URI: ${process.env.MONGO_URI ? 'Definida' : 'NÃO DEFINIDA!!!'}`);
+
         await mongoose.connect(process.env.MONGO_URI, {
-            serverSelectionTimeoutMS: 5000,
-            socketTimeoutMS: 45000,
-            family: 4
+            connectTimeoutMS: 10000, // Tenta conectar por 10 segundos
+            socketTimeoutMS: 45000,  // Tempo para uma operação de socket
+            serverSelectionTimeoutMS: 10000, // Tempo para o driver encontrar um servidor
+            family: 4 // Força o uso de IPv4, que pode resolver problemas em algumas redes
         });
+        
         console.log("✅ Conexão com o MongoDB estabelecida com sucesso!");
 
         const app = express();
-
-        // --- MELHORIA DE SEGURANÇA 1: Desativar cabeçalho X-Powered-By ---
+        
+        // O resto da sua configuração...
         app.disable('x-powered-by');
-
-        // Middleware para o webhook antes do body-parser, se necessário
-        // (Será usado na validação do webhook)
-        app.use('/checkout/webhook', express.raw({ type: 'application/json' }));
-
         app.use(express.json());
         app.use(express.urlencoded({ extended: true }));
 
@@ -46,16 +47,15 @@ const startServer = async () => {
         app.set('views', path.join(__dirname, 'views'));
         app.use(express.static(path.join(__dirname, 'public')));
 
-        // --- MELHORIA DE SEGURANÇA 2: Configuração segura dos cookies de sessão ---
         app.use(session({
             secret: process.env.SESSION_SECRET,
             resave: false,
             saveUninitialized: false,
             store: MongoStore.create({ mongoUrl: process.env.MONGO_URI }),
             cookie: { 
-                maxAge: 1000 * 60 * 60 * 24, // 1 dia
-                httpOnly: true, // Impede que o cookie seja acedido por scripts no navegador
-                secure: process.env.NODE_ENV === 'production' // Garante que o cookie só é enviado em HTTPS
+                maxAge: 1000 * 60 * 60 * 24,
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production'
             }
         }));
 
@@ -87,7 +87,8 @@ const startServer = async () => {
         app.listen(PORT, () => console.log(`🚀 Tool Utility a rodar na porta ${PORT}`));
 
     } catch (error) {
-        console.error("❌ Erro ao conectar ao MongoDB ou iniciar a aplicação.", error);
+        // Este log agora será mais específico sobre o erro de conexão
+        console.error("❌ ERRO CRÍTICO AO INICIAR A APLICAÇÃO:", error);
         process.exit(1);
     }
 };
