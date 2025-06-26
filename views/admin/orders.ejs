@@ -4,7 +4,24 @@
     <meta charset="UTF-8">
     <title><%= pageTitle %></title>
     <link rel="stylesheet" href="/css/admin-style.css">
-    <style>.data-table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden}.data-table th,.data-table td{padding:15px;border-bottom:1px solid #dee2e6;text-align:left}.data-table th{background-color:#f8f9fa}</style>
+    <style>
+        .data-table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden}
+        .data-table th,.data-table td{padding:15px;border-bottom:1px solid #dee2e6;text-align:left; vertical-align: middle;}
+        .data-table th{background-color:#f8f9fa}
+        /* Estilo para o novo botão de envio */
+        .btn-ship {
+            background-color: #198754; /* Verde */
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        .btn-ship:hover {
+            background-color: #157347;
+        }
+    </style>
 </head>
 <body>
     <div class="admin-wrapper">
@@ -12,7 +29,17 @@
         <main class="admin-main-content">
             <h1>Gerenciar Pedidos</h1>
             <table class="data-table">
-                <thead><tr><th>ID</th><th>Cliente</th><th>Data</th><th>Status</th><th>Total</th></tr></thead>
+                <!-- CABEÇALHO ATUALIZADO COM A NOVA COLUNA "AÇÕES" -->
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Cliente</th>
+                        <th>Data</th>
+                        <th>Status</th>
+                        <th>Total</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
                 <tbody>
                     <% orders.forEach(order => { %>
                         <tr>
@@ -20,8 +47,15 @@
                             <td><%= order.userId ? order.userId.name : 'Usuário Deletado' %></td>
                             <td><%= new Date(order.createdAt).toLocaleDateString('pt-BR') %></td>
                             <td><%= order.status %></td>
-                            <!-- CORREÇÃO APLICADA AQUI -->
                             <td>R$ <%= order.totalAmount.toFixed(2).replace('.', ',') %></td>
+                            <!-- CÉLULA ADICIONADA COM O BOTÃO -->
+                            <td>
+                                <% if (order.status === 'Pago') { %>
+                                    <form action="/admin/orders/ship/<%= order._id %>" method="POST" style="display:inline;">
+                                        <button type="submit" class="btn-ship">Marcar como Enviado</button>
+                                    </form>
+                                <% } %>
+                            </td>
                         </tr>
                     <% }) %>
                 </tbody>

@@ -143,5 +143,33 @@ router.get('/coupons/add', (req, res) => { res.render('admin/add-coupon', { page
 router.post('/coupons/add', async (req, res) => { try { const { code, discountType, discountValue, firstPurchaseOnly, expiresAt } = req.body; await new Coupon({ code, discountType, discountValue, firstPurchaseOnly: firstPurchaseOnly === 'on', expiresAt: expiresAt || null }).save(); req.flash('success_msg', 'Cupom criado com sucesso!'); res.redirect('/admin/coupons'); } catch (error) { req.flash('error_msg', 'Erro ao criar cupom. O código já pode existir.'); res.redirect('/admin/coupons/add'); } });
 router.post('/coupons/delete/:id', async (req, res) => { try { await Coupon.findByIdAndDelete(req.params.id); req.flash('success_msg', 'Cupom deletado com sucesso.'); res.redirect('/admin/coupons'); } catch (error) { req.flash('error_msg', 'Erro ao deletar cupom.'); res.redirect('/admin/coupons'); } });
 
+// --- [NOVO] ROTA PARA MARCAR PEDIDO COMO ENVIADO ---
+router.post('/orders/ship/:id', async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.id);
+
+        if (!order) {
+            req.flash('error_msg', 'Pedido não encontrado.');
+            return res.redirect('/admin/orders');
+        }
+
+        // Apenas pedidos com status "Pago" podem ser marcados como enviados
+        if (order.status === 'Pago') {
+            order.status = 'Enviado';
+            await order.save();
+            req.flash('success_msg', 'Pedido marcado como "Enviado" com sucesso!');
+        } else {
+            req.flash('error_msg', 'Apenas pedidos com status "Pago" podem ser marcados como enviados.');
+        }
+
+        res.redirect('/admin/orders');
+
+    } catch (error) {
+        console.error('Erro ao marcar pedido como enviado:', error);
+        req.flash('error_msg', 'Ocorreu um erro no servidor ao tentar atualizar o pedido.');
+        res.redirect('/admin/orders');
+    }
+});
+
 
 module.exports = router;
