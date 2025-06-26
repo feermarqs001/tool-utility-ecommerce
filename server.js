@@ -17,23 +17,20 @@ const accountRoutes = require('./routes/account');
 
 const startServer = async () => {
     try {
-        // --- CONEXÃO COM O MONGODB COM OPÇÕES MAIS ROBUSTAS PARA PRODUÇÃO ---
         console.log("Tentando conectar ao MongoDB Atlas...");
-        console.log(`Usando MONGO_URI: ${process.env.MONGO_URI ? 'Definida' : 'NÃO DEFINIDA!!!'}`);
-
+        console.log(`Usando MONGO_URI: ${process.env.MONGO_URI ? 'Definida' : 'NÃO DEFINIDA!'}`);
         await mongoose.connect(process.env.MONGO_URI, {
-            connectTimeoutMS: 10000, // Tenta conectar por 10 segundos
-            socketTimeoutMS: 45000,  // Tempo para uma operação de socket
-            serverSelectionTimeoutMS: 10000, // Tempo para o driver encontrar um servidor
-            family: 4 // Força o uso de IPv4, que pode resolver problemas em algumas redes
+            connectTimeoutMS: 10000,
+            socketTimeoutMS: 45000,
+            serverSelectionTimeoutMS: 10000,
+            family: 4
         });
-        
         console.log("✅ Conexão com o MongoDB estabelecida com sucesso!");
 
         const app = express();
-        
-        // O resto da sua configuração...
+
         app.disable('x-powered-by');
+
         app.use(express.json());
         app.use(express.urlencoded({ extended: true }));
 
@@ -60,6 +57,7 @@ const startServer = async () => {
         }));
 
         app.use(flash());
+
         app.use((req, res, next) => {
             res.locals.isAuthenticated = req.session.isAuthenticated || false;
             res.locals.userName = req.session.userName || null;
@@ -77,17 +75,38 @@ const startServer = async () => {
             next();
         });
         
+        // --- ROTAS DA APLICAÇÃO ---
         app.use('/', indexRoutes);
         app.use('/admin', adminRoutes);
         app.use('/checkout', checkoutRoutes);
         app.use('/auth', authRoutes);
         app.use('/account', accountRoutes);
         
+        // =================================================================
+        // --- [NOVO] MANIPULADOR DE ERRO 404 (Not Found) ---
+        // Este middleware será executado se nenhuma das rotas acima corresponder.
+        // =================================================================
+        app.use((req, res, next) => {
+            res.status(404).render('404', { pageTitle: 'Página Não Encontrada' });
+        });
+
+        // =================================================================
+        // --- [NOVO] MANIPULADOR DE ERRO 500 (Internal Server Error) ---
+        // Este é o middleware mais importante para depuração. Ele vai capturar
+        // qualquer erro não tratado que ocorrer nas suas rotas.
+        // =================================================================
+        app.use((error, req, res, next) => {
+            // Loga o erro completo no console do Render para podermos ver a causa
+            console.error("❌ ERRO 500 CAPTURADO:", error);
+            
+            // Renderiza uma página de erro genérica para o usuário
+            res.status(500).render('500', { pageTitle: 'Erro no Servidor' });
+        });
+        
         const PORT = process.env.PORT || 3000;
         app.listen(PORT, () => console.log(`🚀 Tool Utility a rodar na porta ${PORT}`));
 
     } catch (error) {
-        // Este log agora será mais específico sobre o erro de conexão
         console.error("❌ ERRO CRÍTICO AO INICIAR A APLICAÇÃO:", error);
         process.exit(1);
     }
