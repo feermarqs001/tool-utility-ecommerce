@@ -26,6 +26,9 @@ const startServer = async () => {
 
         const app = express();
 
+        // --- MELHORIA DE SEGURANÇA 1: Desativar cabeçalho X-Powered-By ---
+        app.disable('x-powered-by');
+
         const mpClient = new MercadoPagoConfig({
             accessToken: process.env.MP_ACCESS_TOKEN,
             options: { timeout: 5000 }
@@ -38,9 +41,7 @@ const startServer = async () => {
         app.use(express.json());
         app.use(express.urlencoded({ extended: true }));
 
-        // ==========================================================
-        // --- ATUALIZAÇÃO DE SEGURANÇA APLICADA AQUI ---
-        // ==========================================================
+        // --- MELHORIA DE SEGURANÇA 2: Configuração segura dos cookies de sessão ---
         app.use(session({
             secret: process.env.SESSION_SECRET,
             resave: false,
@@ -48,11 +49,10 @@ const startServer = async () => {
             store: MongoStore.create({ mongoUrl: process.env.MONGO_URI }),
             cookie: { 
                 maxAge: 1000 * 60 * 60 * 24, // 1 dia
-                httpOnly: true, // Impede que o cookie seja acedido por scripts do lado do cliente
+                httpOnly: true, // Impede que o cookie seja acedido por scripts no navegador
                 secure: process.env.NODE_ENV === 'production' // Garante que o cookie só é enviado em HTTPS
             }
         }));
-        // ==========================================================
 
         app.use(flash());
         app.use((req, res, next) => {
@@ -79,7 +79,7 @@ const startServer = async () => {
         app.use('/account', accountRoutes);
         
         const PORT = process.env.PORT || 3000;
-        app.listen(PORT, () => console.log(`🚀 Tool Utility rodando na porta ${PORT}`));
+        app.listen(PORT, () => console.log(`🚀 Tool Utility a rodar na porta ${PORT}`));
 
     } catch (error) {
         console.error("❌ Erro ao conectar ao MongoDB ou iniciar a aplicação.", error);
