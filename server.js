@@ -29,6 +29,13 @@ const startServer = async () => {
         // --- MELHORIA DE SEGURANÇA 1: Desativar cabeçalho X-Powered-By ---
         app.disable('x-powered-by');
 
+        // Middleware para o webhook antes do body-parser, se necessário
+        // (Será usado na validação do webhook)
+        app.use('/checkout/webhook', express.raw({ type: 'application/json' }));
+
+        app.use(express.json());
+        app.use(express.urlencoded({ extended: true }));
+
         const mpClient = new MercadoPagoConfig({
             accessToken: process.env.MP_ACCESS_TOKEN,
             options: { timeout: 5000 }
@@ -38,8 +45,6 @@ const startServer = async () => {
         app.set('view engine', 'ejs');
         app.set('views', path.join(__dirname, 'views'));
         app.use(express.static(path.join(__dirname, 'public')));
-        app.use(express.json());
-        app.use(express.urlencoded({ extended: true }));
 
         // --- MELHORIA DE SEGURANÇA 2: Configuração segura dos cookies de sessão ---
         app.use(session({
