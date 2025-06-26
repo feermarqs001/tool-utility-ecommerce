@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Adicionar Produto - Admin</title>
+    <link rel="stylesheet" href="/css/admin-style.css">
+</head>
+<body>
+    <div class="admin-wrapper">
+        <%- include('partials/sidebar') %>
+        <main class="admin-main-content">
+            <h1>Adicionar Novo Produto</h1>
+            <div class="form-container">
+                <form action="/admin/products/add" method="POST">
+                    <div class="form-group"><label for="name">Nome do Produto</label><input type="text" id="name" name="name" required></div>
+                    <div class="form-group"><label for="description">Descrição</label><textarea id="description" name="description" rows="4" required></textarea></div>
+                    <div class="form-group"><label for="price">Preço Original (R$)</label><input type="number" id="price" name="price" step="0.01" required></div>
+                    <div class="form-group"><label for="stock">Estoque</label><input type="number" id="stock" name="stock" required></div>
+                    <div class="form-group"><label for="category">Categoria</label><input type="text" id="category" name="category" required></div>
+
+                    <hr style="margin: 30px 0;">
+                    <h3>Configurar Promoção</h3>
+                    <div class="form-group" style="display:flex; align-items:center; gap:10px;">
+                        <input type="checkbox" id="onSale" name="onSale" style="width:auto;">
+                        <label for="onSale" style="margin:0;">Marcar como "Em Oferta"</label>
+                    </div>
+                    <div class="form-group">
+                        <label for="salePrice">Preço Promocional (R$)</label>
+                        <input type="number" id="salePrice" name="salePrice" step="0.01" placeholder="Ex: 399.90 (deixe em branco se não estiver em promoção)">
+                    </div>
+                    <hr style="margin: 30px 0;">
+                    
+                    <div class="form-group">
+                        <label for="imageUrls">URLs das Imagens (uma URL por linha)</label>
+                        <textarea id="imageUrls" name="imageUrls" rows="5" placeholder="https://site.com/imagem1.jpg&#10;https://site.com/imagem2.png"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="specifications">Especificações Técnicas (formato: Chave:Valor)</label>
+                        <textarea id="specifications" name="specifications" rows="5" placeholder="Voltagem:110V&#10;Peso:2.5kg"></textarea>
+                    </div>
+                    <button type="submit" class="btn-submit">Salvar Produto</button>
+                </form>
+            </div>
+        </main>
+    </div>
+    <script>document.getElementById('sidebarToggle').addEventListener('click', function() { document.getElementById('adminSidebar').classList.toggle('is-open'); });</script>
+</body>
+</html>

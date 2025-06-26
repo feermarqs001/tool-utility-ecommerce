@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title><%= pageTitle %></title>
+    <link rel="stylesheet" href="/css/admin-style.css">
+    <style>.data-table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden}.data-table th,.data-table td{padding:15px;border-bottom:1px solid #dee2e6;text-align:left}.data-table th{background-color:#f8f9fa}</style>
+</head>
+<body>
+    <div class="admin-wrapper">
+        <%- include('partials/sidebar') %>
+        <main class="admin-main-content">
+            <h1>Gerenciar Pedidos</h1>
+            <table class="data-table">
+                <thead><tr><th>ID</th><th>Cliente</th><th>Data</th><th>Status</th><th>Total</th></tr></thead>
+                <tbody>
+                    <% orders.forEach(order => { %>
+                        <tr>
+                            <td>...<%= order._id.toString().slice(-6) %></td>
+                            <td><%= order.userId ? order.userId.name : 'Usuário Deletado' %></td>
+                            <td><%= new Date(order.createdAt).toLocaleDateString('pt-BR') %></td>
+                            <td><%= order.status %></td>
+                            <!-- CORREÇÃO APLICADA AQUI -->
+                            <td>R$ <%= order.totalAmount.toFixed(2).replace('.', ',') %></td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </main>
+    </div>
+</body>
+</html>

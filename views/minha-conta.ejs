@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= locals.pageTitle || 'Minha Conta' %> - Tool Utility</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <%- include('partials/header') %>
+
+    <main class="container account-container">
+        <h1>Minha Conta</h1>
+        <p style="margin-bottom: 20px; font-size: 1.2em;">Bem-vindo à sua área pessoal, <strong><%= user.name %></strong>!</p>
+        
+        <% if(user) { %>
+            <div class="account-box">
+                <h2>Meus Dados Pessoais</h2>
+                <p><strong>Nome:</strong> <%= user.name %></p>
+                <p><strong>Email:</strong> <%= user.email %></p>
+                <% if (user.cpf) { %><p><strong>CPF:</strong> <%= user.cpf %></p><% } %>
+                <% if (user.telephone) { %><p><strong>Telefone:</strong> <%= user.telephone %></p><% } %>
+
+                <% if (user.address && user.address.street) { %>
+                    <h2>Meu Endereço</h2>
+                    <p><%= user.address.street %>, <%= user.address.number %> <%= user.address.complement || '' %></p>
+                    <p><%= user.address.neighborhood %> - <%= user.address.city %>, <%= user.address.state.toUpperCase() %></p>
+                    <p>CEP: <%= user.address.zipCode %></p>
+                    <a href="/account/edit-address" class="btn" style="max-width: 200px; margin-top: 15px;">Editar Endereço</a>
+                <% } else { %>
+                    <h2>Meu Endereço</h2>
+                    <p>Você ainda não cadastrou um endereço.</p>
+                    <a href="/account/edit-address" class="btn" style="max-width: 200px; margin-top: 15px;">Adicionar Endereço</a>
+                <% } %>
+                
+                <h2>Meus Pedidos</h2>
+                <p>O histórico de pedidos aparecerá aqui em breve.</p>
+            </div>
+        <% } else { %>
+            <p>Não foi possível carregar os dados do usuário.</p>
+        <% } %>
+    </main>
+
+    <%- include('partials/footer') %>
+</body>
+</html>

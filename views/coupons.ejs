@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title><%= pageTitle %></title>
+    <link rel="stylesheet" href="/css/admin-style.css">
+    <style>.data-table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden}.data-table th,.data-table td{padding:15px;border-bottom:1px solid #dee2e6;text-align:left;vertical-align:middle}.data-table th{background-color:#f8f9fa}.actions form{display:inline-block}.btn-delete{background:#dc3545;color:#fff;padding:5px 10px;border-radius:5px;border:none;cursor:pointer;font-size:0.9em}.header-actions{display:flex;justify-content:space-between;align-items:center}.btn-add-new{background:var(--primary-blue);color:#fff;padding:10px 15px;text-decoration:none;border-radius:5px}</style>
+</head>
+<body>
+    <div class="admin-wrapper">
+        <%- include('partials/sidebar') %>
+        <main class="admin-main-content">
+            <%- include('../partials/flash-messages') %>
+            <div class="header-actions">
+                <h1>Gerenciar Cupons</h1>
+                <a href="/admin/coupons/add" class="btn-add-new">+ Adicionar Novo Cupom</a>
+            </div>
+            <table class="data-table">
+                <thead><tr><th>Código</th><th>Tipo</th><th>Valor</th><th>1ª Compra?</th><th>Status</th><th>Ações</th></tr></thead>
+                <tbody>
+                    <% coupons.forEach(coupon => { %>
+                        <tr>
+                            <td><strong><%= coupon.code %></strong></td>
+                            <td><%= coupon.discountType === 'percentage' ? 'Porcentagem' : 'Fixo' %></td>
+                            <td><%= coupon.discountType === 'percentage' ? `${coupon.discountValue}%` : `R$ ${coupon.discountValue.toFixed(2)}` %></td>
+                            <td><%= coupon.firstPurchaseOnly ? 'Sim' : 'Não' %></td>
+                            <td><%= coupon.isActive ? 'Ativo' : 'Inativo' %></td>
+                            <td class="actions">
+                                <form action="/admin/coupons/delete/<%= coupon._id %>" method="POST" onsubmit="return confirm('Tem certeza?');">
+                                    <button type="submit" class="btn-delete">Deletar</button>
+                                </form>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </main>
+    </div>
+    <script>document.getElementById('sidebarToggle').addEventListener('click', function() { document.getElementById('adminSidebar').classList.toggle('is-open'); });</script>
+</body>
+</html>

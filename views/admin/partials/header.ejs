@@ -1,0 +1,19 @@
+<header class="main-header">
+    <div class="container">
+        <h1 class="logo">
+            <a href="/">Tool<span class="highlight">Utility</span></a>
+        </h1>
+        <nav class="main-nav">
+            <a href="/">Início</a>
+            <a href="/checkout/cart">Carrinho</a>
+            
+            <% if (locals.isAuthenticated) { %>
+                <a href="/minha-conta">Olá, <%= locals.userName %></a>
+                <a href="/auth/logout">Sair</a>
+            <% } else { %>
+                <a href="/auth/login">Login</a>
+                <a href="/auth/register">Cadastre-se</a>
+            <% } %>
+        </nav>
+    </div>
+</header>

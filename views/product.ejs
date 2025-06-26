@@ -1,0 +1,37 @@
+<!-- views/product.ejs -->
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title><%= produto.name %> | Tool Utility</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header>
+    <h1><a href="/">Tool Utility</a></h1>
+  </header>
+
+  <main>
+    <div class="produto-detalhe">
+      <img src="<%= produto.image %>" alt="<%= produto.name %>">
+      <div>
+        <h2><%= produto.name %></h2>
+        <p><%= produto.description %></p>
+        <p><strong>R$ <%= produto.price.toFixed(2) %></strong></p>
+        <form action="/checkout/add" method="POST">
+          <input type="hidden" name="productId" value="<%= produto._id %>">
+          <input type="number" name="quantity" value="1" min="1">
+          <button type="submit">Adicionar ao carrinho</button>
+        </form>
+      </div>
+    </div>
+</main>
+    </div>
+    <script>
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('adminSidebar').classList.toggle('is-open');
+        });
+    </script>
+  </main>
+</body>
+</html>

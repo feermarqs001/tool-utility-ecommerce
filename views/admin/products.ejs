@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title><%= pageTitle %></title>
+    <link rel="stylesheet" href="/css/admin-style.css">
+    <style>
+        .data-table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden}.data-table th,.data-table td{padding:15px;border-bottom:1px solid #dee2e6;text-align:left;vertical-align:middle}.data-table th{background-color:#f8f9fa}.data-table img{width:60px;height:60px;object-fit:cover;border-radius:4px}.actions form{display:inline-block;margin-right:5px}.btn-edit{background:#ffc107;color:#212529;padding:5px 10px;border-radius:5px;text-decoration:none;font-size:0.9em}.btn-delete{background:#dc3545;color:#fff;padding:5px 10px;border-radius:5px;border:none;cursor:pointer;font-size:0.9em}
+    </style>
+</head>
+<body>
+    <div class="admin-wrapper">
+        <%- include('partials/sidebar') %>
+        <main class="admin-main-content">
+            <h1>Gerenciar Produtos</h1>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Imagem</th>
+                        <th>Nome</th>
+                        <th>Estoque</th>
+                        <th>Preço</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% products.forEach(product => { %>
+                        <tr>
+                            <td>
+                                <img src="<%= (product.imageUrls && product.imageUrls.length > 0) ? product.imageUrls[0] : 'https://via.placeholder.com/150?text=Sem+Imagem' %>" alt="<%= product.name %>">
+                            </td>
+                            <td><%= product.name %></td>
+                            <td><%= product.stock %></td>
+                            <td>R$ <%= product.price.toFixed(2) %></td>
+                            <td class="actions">
+                                <a href="/admin/products/edit/<%= product._id %>" class="btn-edit">Editar</a>
+                                <form action="/admin/products/delete/<%= product._id %>" method="POST" onsubmit="return confirm('Tem certeza que deseja deletar este produto?');">
+                                    <button type="submit" class="btn-delete">Deletar</button>
+                                </form>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </main>
+    </div>
+</body>
+</html>

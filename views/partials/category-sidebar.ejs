@@ -1,0 +1,16 @@
+<div class="sidebar-box">
+    <h3>Categorias</h3>
+    <ul class="category-list">
+        <% if (locals.categories && categories.length > 0) { %>
+            <% categories.forEach(category => { %>
+                <li>
+                    <a href="/category/<%= encodeURIComponent(category) %>" class="<%= (locals.categoryName && category === categoryName) ? 'active' : '' %>">
+                        <%= category %>
+                    </a>
+                </li>
+            <% }); %>
+        <% } else { %>
+            <li>Nenhuma categoria encontrada.</li>
+        <% } %>
+    </ul>
+</div>

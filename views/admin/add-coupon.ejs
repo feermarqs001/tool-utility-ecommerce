@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title><%= pageTitle %></title>
+    <link rel="stylesheet" href="/css/admin-style.css">
+</head>
+<body>
+    <div class="admin-wrapper">
+        <%- include('partials/sidebar') %>
+        <main class="admin-main-content">
+            <h1>Adicionar Novo Cupom</h1>
+            <%- include('../partials/flash-messages') %>
+            <div class="form-container">
+                <form action="/admin/coupons/add" method="POST">
+                    <div class="form-group"><label for="code">Código do Cupom (ex: BEMVINDO40)</label><input type="text" id="code" name="code" required style="text-transform:uppercase"></div>
+                    <div class="form-group"><label for="discountType">Tipo de Desconto</label><select id="discountType" name="discountType" class="form-control" style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 5px; font-size: 1em;"><option value="percentage">Porcentagem (%)</option><option value="fixed">Valor Fixo (R$)</option></select></div>
+                    <div class="form-group"><label for="discountValue">Valor do Desconto</label><input type="number" id="discountValue" name="discountValue" step="0.01" required></div>
+                    <div class="form-group"><label for="expiresAt">Data de Expiração (opcional)</label><input type="date" id="expiresAt" name="expiresAt" style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 5px; font-size: 1em;"></div>
+                    <div class="form-group" style="display:flex; align-items:center; gap:10px;"><input type="checkbox" id="firstPurchaseOnly" name="firstPurchaseOnly" style="width:auto;"><label for="firstPurchaseOnly" style="margin:0;">Válido apenas para a primeira compra</label></div>
+                    <button type="submit" class="btn-submit">Criar Cupom</button>
+                </form>
+            </div>
+        </main>
+    </div>
+    <script>document.getElementById('sidebarToggle').addEventListener('click', function() { document.getElementById('adminSidebar').classList.toggle('is-open'); });</script>
+</body>
+</html>

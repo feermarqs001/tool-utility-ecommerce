@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ToolUtility - <%= pageTitle %></title>
+
+    <link rel="stylesheet" href="/css/style.css">
+
+    </head>
+<body>
+
+    <header class="main-header">
+        <div class="container">
+            <div class="header-left">
+                <button class="nav-toggle" id="navToggle" aria-label="Abrir menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+    
+            <h1 class="logo">
+                <a href="/">Tool<span class="highlight">Utility</span></a>
+            </h1>
+    
+            <div class="header-user-actions">
+                <a href="/checkout/cart" class="header-cart-icon" aria-label="Ver carrinho de compras">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                    <% if (locals.cartCount > 0) { %>
+                        <span class="cart-count-badge"><%= locals.cartCount %></span>
+                    <% } %>
+                </a>
+    
+                <% if (!locals.isAuthenticated) { %>
+                    <a href="/auth/login" class="btn-header-login">Entre ou cadastre-se</a>
+                <% } %>
+            </div>
+        </div>
+    </header>
+    
+    <div class="nav-panel" id="navPanel">
+        <nav class="main-nav">
+            <% if (locals.isAuthenticated) { %>
+                <div class="nav-user-info"><strong>Olá, <%= locals.userName %></strong></div>
+                <a href="/minha-conta">Minha Conta</a>
+                <a href="/meus-pedidos">Meus Pedidos</a>
+                <hr>
+            <% } %>
+            <a href="/">Início</a>
+            <a href="/ofertas">Ofertas</a>
+            <a href="/checkout/cart">Carrinho</a>
+            <a href="/contato">Fale Conosco</a>
+            <hr>
+            <% if (locals.isAuthenticated) { %>
+                <a href="/auth/logout" class="nav-logout">Sair</a>
+            <% } else { %>
+                <a href="/auth/login">Login</a>
+                <a href="/auth/register">Cadastre-se</a>
+            <% } %>
+        </nav>
+    </div>
+    
+    <div class="nav-overlay" id="navOverlay"></div>
+    
+    <div class="container flash-container">
+        <%- include('flash-messages') %>
+    </div>

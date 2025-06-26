@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin | Tool Utility</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <h1>Painel do Administrador</h1>
+  <a href="/admin/novo">Novo Produto</a>
+  <table>
+    <thead>
+      <tr><th>Nome</th><th>Preço</th><th>Estoque</th><th>Ações</th></tr>
+    </thead>
+    <tbody>
+      <% produtos.forEach(p => { %>
+        <tr>
+          <td><%= p.name %></td>
+          <td>R$ <%= p.price.toFixed(2) %></td>
+          <td><%= p.stock %></td>
+          <td>
+            <form method="POST" action="/admin/deletar/<%= p._id %>">
+              <button type="submit">Deletar</button>
+            </form>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</main>
+    </div>
+    <script>
+        document.getElementById('sidebarToggle').addEventListener('click', function() {
+            document.getElementById('adminSidebar').classList.toggle('is-open');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+<% if (locals.success_msg && success_msg.length > 0) { %>
+    <div class="alert success" style="margin-bottom: 20px;">
+        <%= success_msg %>
+    </div>
+<% } %>
+
+<% if (locals.error_msg && error_msg.length > 0) { %>
+    <div class="alert error" style="margin-bottom: 20px;">
+        <%= error_msg %>
+    </div>
+<% } %>

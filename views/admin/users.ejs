@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title><%= pageTitle %></title>
+    <link rel="stylesheet" href="/css/admin-style.css">
+    <style>.data-table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden}.data-table th,.data-table td{padding:15px;border-bottom:1px solid #dee2e6;text-align:left}.data-table th{background-color:#f8f9fa}</style>
+</head>
+<body>
+    <div class="admin-wrapper">
+        <%- include('partials/sidebar') %>
+        <main class="admin-main-content">
+            <h1>Gerenciar Usuários</h1>
+            <table class="data-table">
+                <thead><tr><th>Nome</th><th>Email</th><th>Registrado em</th></tr></thead>
+                <tbody>
+                    <% users.forEach(user => { %>
+                        <tr>
+                            <td><%= user.name %></td>
+                            <td><%= user.email %></td>
+                            <td><%= new Date(user.createdAt).toLocaleDateString('pt-BR') %></td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </main>
+    </div>
+</body>
+</html>
