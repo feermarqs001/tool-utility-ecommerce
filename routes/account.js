@@ -8,16 +8,14 @@ const Order = require('../models/Order');
 router.use(isAuthenticated);
 
 // ROTA PRINCIPAL DA CONTA: GET /account
-// Esta rota resolve o erro "Cannot GET /account"
 router.get('/', async (req, res) => {
     try {
-        // Busca os dados mais recentes do utilizador para mostrar na página
         const user = await User.findById(req.session.userId);
         if (!user) {
             req.flash('error_msg', 'Utilizador não encontrado.');
             return res.redirect('/auth/login');
         }
-        res.render('account/index', { // Vai renderizar a view 'index.ejs' que vamos criar
+        res.render('account/index', {
             pageTitle: 'Minha Conta',
             user: user
         });
@@ -29,12 +27,10 @@ router.get('/', async (req, res) => {
 });
 
 // ROTA PARA ATUALIZAR OS DADOS DA CONTA: POST /account
-// Esta rota recebe os dados do formulário da página "Minha Conta"
 router.post('/', async (req, res) => {
     try {
         const { name, email, street, number, complement, neighborhood, city, state, zipCode } = req.body;
         
-        // Atualiza todos os dados no banco de dados de uma vez
         await User.findByIdAndUpdate(req.session.userId, {
             name,
             email,
@@ -50,14 +46,15 @@ router.post('/', async (req, res) => {
     }
 });
 
-// ROTA "MEUS PEDIDOS": GET /account/orders
-// Esta rota resolve o erro "Cannot GET /meus-pedidos"
+// ROTA "MEUS PEDIDOS": GET /account/orders (COM A CORREÇÃO)
 router.get('/orders', async (req, res) => {
     try {
-        // Busca todos os pedidos do utilizador logado, do mais recente para o mais antigo
-        const orders = await Order.find({ userId: req.session.userId }).sort({ createdAt: -1 });
+        // [CORREÇÃO APLICADA AQUI] Adicionamos o .populate para buscar os dados dos produtos
+        const orders = await Order.find({ userId: req.session.userId })
+            .sort({ createdAt: -1 })
+            .populate('products.productId', 'name imageUrls'); // Esta é a linha corrigida
         
-        res.render('account/orders', { // Vai renderizar a view 'orders.ejs' que vamos criar
+        res.render('account/orders', {
             pageTitle: 'Meus Pedidos',
             orders: orders
         });

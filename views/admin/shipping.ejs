@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Configurar Frete - Admin</title>
+    <link rel="stylesheet" href="/css/admin-style.css">
+</head>
+<body>
+    <div class="admin-wrapper">
+        <%- include('partials/sidebar') %>
+        <main class="admin-main-content">
+            <h1>Configurações de Frete</h1>
+            <p>Defina as regras para entregas locais. Outras regiões serão calculadas via API dos Correios.</p>
+
+            <div class="form-container">
+                <form action="/admin/shipping" method="POST">
+                    <div class="form-group">
+                        <label for="localCity">Cidade para Entrega Local</label>
+                        <input type="text" id="localCity" name="localCity" class="form-control" value="<%= config.localCity %>" required>
+                        <small>Ex: Curitiba. O sistema verificará o CEP do cliente.</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="localCost">Custo da Entrega Local (R$)</label>
+                        <input type="number" id="localCost" name="localCost" step="0.01" class="form-control" value="<%= config.localCost %>" required>
+                        <small>Use 0 para frete grátis na cidade local.</small>
+                    </div>
+                    <button type="submit" class="btn-submit">Salvar Configurações</button>
+                </form>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

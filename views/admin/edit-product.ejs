@@ -19,6 +19,30 @@
                     <div class="form-group"><label for="category">Categoria</label><input type="text" id="category" name="category" value="<%= product.category %>" required></div>
 
                     <hr style="margin: 30px 0;">
+                    <h3>Frete e Dimensões</h3>
+                    <p class="form-hint">Essas informações são obrigatórias para o cálculo do frete.</p>
+                    
+                    <div class="form-group">
+                        <label for="weight">Peso (kg)</label>
+                        <input type="number" id="weight" name="weight" step="0.01" placeholder="Ex: 0.8" value="<%= product.weight || '' %>" required>
+                    </div>
+
+                    <div class="dimension-group" style="display: flex; gap: 20px;">
+                        <div class="form-group" style="flex: 1;">
+                            <label for="length">Comprimento (cm)</label>
+                            <input type="number" id="length" name="length" step="0.1" placeholder="Ex: 20" value="<%= product.dimensions ? product.dimensions.length : '' %>" required>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label for="width">Largura (cm)</label>
+                            <input type="number" id="width" name="width" step="0.1" placeholder="Ex: 15" value="<%= product.dimensions ? product.dimensions.width : '' %>" required>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label for="height">Altura (cm)</label>
+                            <input type="number" id="height" name="height" step="0.1" placeholder="Ex: 10" value="<%= product.dimensions ? product.dimensions.height : '' %>" required>
+                        </div>
+                    </div>
+
+                    <hr style="margin: 30px 0;">
                     <h3>Configurar Promoção</h3>
                     <div class="form-group" style="display:flex; align-items:center; gap:10px;">
                         <input type="checkbox" id="onSale" name="onSale" style="width:auto;" <%= product.onSale ? 'checked' : '' %>>
@@ -38,6 +62,8 @@
             </div>
         </main>
     </div>
-    <script>document.getElementById('sidebarToggle').addEventListener('click', function() { document.getElementById('adminSidebar').classList.toggle('is-open'); });</script>
+    <script>
+        // Script para toggle do sidebar, se aplicável
+    </script>
 </body>
 </html>

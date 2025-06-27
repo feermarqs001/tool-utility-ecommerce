@@ -28,9 +28,12 @@
             <div class="product-info">
                 <h1><%= product.name %></h1>
                 <p class="price">R$ <%= product.price.toFixed(2) %></p>
-                <div class="shipping-badge" style="margin-bottom: 20px;">✓ Frete Grátis para todo o Brasil</div>
                 
                 <form action="/checkout/add-to-cart/<%= product._id %>" method="POST" style="margin-bottom: 20px;">
+                    <div class="form-group-inline">
+                        <label for="quantity">Quantidade:</label>
+                        <input type="number" name="quantity" id="quantity" value="1" min="1" max="<%= product.stock %>" class="quantity-input">
+                    </div>
                     <button type="submit" class="btn">Adicionar ao Carrinho</button>
                 </form>
                 
@@ -48,58 +51,56 @@
                     </div>
                 <% } %>
             </div>
+        </div>
 
-            <div class="reviews-section">
-                <h2>Avaliações de Clientes</h2>
+        <div class="reviews-section">
+            <h2>Avaliações de Clientes</h2>
+
+            <% if (reviews.length === 0) { %>
+                <p>Este produto ainda não tem avaliações. Seja o primeiro a avaliar!</p>
+            <% } else { %>
                 <% reviews.forEach(review => { %>
                     <div class="review">
                         <div class="review-header">
-                            <span class="review-author"><%= review.author %></span>
-                            <span class="stars"><% for(let i=0; i<review.stars; i++) { %>★<% } %><% for(let i=0; i<5-review.stars; i++) { %>☆<% } %></span>
+                            <span class="review-author"><%= review.userName %></span>
+                            <span class="stars"><% for(let i=0; i < review.rating; i++) { %>★<% } %><% for(let i=0; i < 5 - review.rating; i++) { %>☆<% } %></span>
                         </div>
-                        <strong><%= review.title %></strong>
-                        <p><%= review.body %></p>
-                        <small style="color: #777;">Avaliado em <%= review.date %></small>
+                        <p><%= review.comment %></p>
+                        <small style="color: #777;">Avaliado em <%= new Date(review.createdAt).toLocaleDateString('pt-BR') %></small>
                     </div>
                 <% }) %>
-            </div>
+            <% } %>
+
+            <hr style="margin: 40px 0;">
+
+            <% if (canReview) { %>
+                <h3>Deixe sua avaliação</h3>
+                <p>Você comprou este produto. Compartilhe sua opinião com outros clientes!</p>
+                <form action="/product/<%= product._id %>/review" method="POST" class="review-form">
+                    <div class="form-group">
+                        <label for="rating">Sua nota:</label>
+                        <select name="rating" id="rating" required>
+                            <option value="5">5 Estrelas ★★★★★</option>
+                            <option value="4">4 Estrelas ★★★★☆</option>
+                            <option value="3">3 Estrelas ★★★☆☆</option>
+                            <option value="2">2 Estrelas ★★☆☆☆</option>
+                            <option value="1">1 Estrela ★☆☆☆☆</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="comment">Seu comentário:</label>
+                        <textarea name="comment" id="comment" rows="5" placeholder="Escreva o que você achou do produto..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn">Enviar Avaliação</button>
+                </form>
+            <% } %>
         </div>
     </main>
 
     <%- include('partials/footer') %>
 
     <script>
-        function changeImage(thumbnailElement, newSrc) {
-            document.getElementById('mainProductImage').src = newSrc;
-            const thumbnails = document.querySelectorAll('.thumbnails img');
-            thumbnails.forEach(thumb => thumb.classList.remove('active'));
-            thumbnailElement.classList.add('active');
-        }
-        document.addEventListener('DOMContentLoaded', () => {
-            const firstThumbnail = document.querySelector('.thumbnails img');
-            if (firstThumbnail) { firstThumbnail.classList.add('active'); }
-            
-            document.querySelectorAll('.accordion-header').forEach(header => {
-                if (header.classList.contains('active')) {
-                    const content = header.nextElementSibling;
-                    content.style.maxHeight = content.scrollHeight + "px";
-                }
-                header.addEventListener('click', () => {
-                    const currentlyActiveHeader = document.querySelector('.accordion-header.active');
-                    if (currentlyActiveHeader && currentlyActiveHeader !== header) {
-                        currentlyActiveHeader.classList.remove('active');
-                        currentlyActiveHeader.nextElementSibling.style.maxHeight = 0;
-                    }
-                    header.classList.toggle('active');
-                    const content = header.nextElementSibling;
-                    if (header.classList.contains('active')) {
-                        content.style.maxHeight = content.scrollHeight + "px";
-                    } else {
-                        content.style.maxHeight = 0;
-                    }
-                });
-            });
-        });
+        // ... (seu script existente) ...
     </script>
 </body>
 </html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Moderar Avaliações - Admin</title>
+    <link rel="stylesheet" href="/css/admin-style.css">
+</head>
+<body>
+    <div class="admin-wrapper">
+        <%- include('partials/sidebar') %>
+        <main class="admin-main-content">
+            <h1>Moderar Avaliações</h1>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Produto</th>
+                            <th>Autor</th>
+                            <th>Nota</th>
+                            <th>Comentário</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (reviews.length === 0) { %>
+                            <tr>
+                                <td colspan="6">Nenhuma avaliação pendente.</td>
+                            </tr>
+                        <% } else { %>
+                            <% reviews.forEach(review => { %>
+                                <tr>
+                                    <td><%= review.productId ? review.productId.name : 'Produto Removido' %></td>
+                                    <td><%= review.userName %></td>
+                                    <td><%= review.rating %> / 5 ★</td>
+                                    <td style="max-width: 300px;"><%= review.comment %></td>
+                                    <td>
+                                        <% if (review.isApproved) { %>
+                                            <span class="status-approved">Aprovada</span>
+                                        <% } else { %>
+                                            <span class="status-pending">Pendente</span>
+                                        <% } %>
+                                    </td>
+                                    <td class="actions-cell">
+                                        <% if (!review.isApproved) { %>
+                                            <form action="/admin/reviews/approve/<%= review._id %>" method="POST" style="display: inline;">
+                                                <button type="submit" class="btn-action btn-approve">Aprovar</button>
+                                            </form>
+                                        <% } %>
+                                        <form action="/admin/reviews/delete/<%= review._id %>" method="POST" style="display: inline;">
+                                            <button type="submit" class="btn-action btn-delete">Deletar</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

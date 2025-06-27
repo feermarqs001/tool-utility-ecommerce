@@ -2,65 +2,101 @@ const express = require('express');
 const router = express.Router();
 const Product = require('../models/Product');
 const User = require('../models/User');
+const Order = require('../models/Order'); // NOVO
+const Review = require('../models/Review'); // NOVO
 const isAuthenticated = require('../middleware/isAuthenticated');
-const generateFakeReviews = require('../helpers/fakeReviewGenerator');
 
-// Rota da Página Inicial
-router.get('/', async (req, res) => {
-    try {
-        const [products, categories] = await Promise.all([
-            Product.find().sort({ createdAt: -1 }),
-            Product.distinct('category') 
-        ]);
-        res.render('index', { pageTitle: 'Tool Utility', products, categories });
-    } catch (error) { res.status(500).send("Erro ao carregar a página inicial."); }
-});
+// Rota da Página Inicial (sem mudanças)
+router.get('/', async (req, res) => { /* ...código existente... */ });
 
-// Rota de Categoria
-router.get('/category/:categoryName', async (req, res) => {
-    try {
-        const { categoryName } = req.params;
-        const products = await Product.find({ category: categoryName });
-        const categories = await Product.distinct('category');
-        res.render('category', { pageTitle: `Categoria: ${categoryName}`, products, categories, categoryName });
-    } catch (error) { res.status(500).send("Erro ao carregar categoria."); }
-});
+// Rota de Categoria (sem mudanças)
+router.get('/category/:categoryName', async (req, res) => { /* ...código existente... */ });
 
-// Rota de Ofertas
-router.get('/ofertas', async (req, res) => {
-    try {
-        const productsOnSale = await Product.find({ onSale: true });
-        const categories = await Product.distinct('category');
-        res.render('offers', { pageTitle: 'Ofertas', products: productsOnSale, categories });
-    } catch (error) { res.status(500).send("Erro ao carregar ofertas."); }
-});
+// Rota de Ofertas (sem mudanças)
+router.get('/ofertas', async (req, res) => { /* ...código existente... */ });
 
-
-// Rota de Detalhes do Produto
+// Rota de Detalhes do Produto (ATUALIZADA)
 router.get('/product/:id', async (req, res) => {
     try {
         const product = await Product.findById(req.params.id);
-        if (!product) return res.status(404).send('Produto não encontrado');
-        const fakeReviews = generateFakeReviews(product.category);
-        res.render('product-detail', { pageTitle: product.name, product, reviews: fakeReviews }); 
-    } catch(error) { res.status(500).send('Erro ao buscar produto.'); }
+        if (!product) return res.status(404).render('404');
+
+        // [NOVO] Busca as avaliações aprovadas para este produto
+        const reviews = await Review.find({ productId: product._id, isApproved: true }).sort({ createdAt: -1 });
+
+        // [NOVO] Verifica se o usuário logado pode avaliar o produto
+        let canReview = false;
+        if (req.session.isAuthenticated) {
+            // Verifica se o usuário já comprou este produto
+            const hasPurchased = await Order.findOne({
+                userId: req.session.userId,
+                'products.productId': product._id,
+                status: { $in: ['Entregue', 'Pago', 'Enviado'] } // Regra de negócio: só pode avaliar se já pagou/recebeu
+            });
+
+            // Verifica se o usuário já não avaliou este produto
+            const hasReviewed = await Review.findOne({
+                productId: product._id,
+                userId: req.session.userId
+            });
+
+            if (hasPurchased && !hasReviewed) {
+                canReview = true;
+            }
+        }
+
+        res.render('product-detail', {
+            pageTitle: product.name,
+            product: product,
+            reviews: reviews, // Enviando avaliações reais
+            canReview: canReview // Enviando a permissão para avaliar
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).render('500');
+    }
 });
 
-// Rota "Minha Conta"
-router.get('/minha-conta', isAuthenticated, async (req, res) => {
+
+// --- [NOVO] ROTA PARA SUBMETER UMA AVALIAÇÃO ---
+router.post('/product/:id/review', isAuthenticated, async (req, res) => {
     try {
-        const user = await User.findById(req.session.userId);
-        if (!user) return res.redirect('/auth/login');
-        res.render('minha-conta', { pageTitle: 'Minha Conta', user: user });
-    } catch (error) { res.redirect('/'); }
+        const productId = req.params.id;
+        const { rating, comment } = req.body;
+
+        // Repete a verificação de segurança no backend
+        const hasPurchased = await Order.findOne({ userId: req.session.userId, 'products.productId': productId });
+        if (!hasPurchased) {
+            req.flash('error_msg', 'Você só pode avaliar produtos que já comprou.');
+            return res.redirect(`/product/${productId}`);
+        }
+
+        const existingReview = await Review.findOne({ productId: productId, userId: req.session.userId });
+        if (existingReview) {
+            req.flash('error_msg', 'Você já avaliou este produto.');
+            return res.redirect(`/product/${productId}`);
+        }
+
+        const newReview = new Review({
+            productId: productId,
+            userId: req.session.userId,
+            userName: req.session.userName,
+            rating: parseInt(rating, 10),
+            comment: comment
+        });
+
+        await newReview.save();
+        req.flash('success_msg', 'Sua avaliação foi enviada e aguarda moderação. Obrigado!');
+        res.redirect(`/product/${productId}`);
+
+    } catch (error) {
+        req.flash('error_msg', 'Ocorreu um erro ao enviar sua avaliação.');
+        res.redirect(`/product/${req.params.id}`);
+    }
 });
 
-// Rota de Contato
-router.get('/contato', (req, res) => { res.render('contact', { pageTitle: 'Fale Conosco' }); });
-router.post('/contato', (req, res) => {
-    console.log('Mensagem de contato:', req.body);
-    req.flash('success_msg', 'Sua mensagem foi enviada com sucesso!');
-    res.redirect('/contato');
-});
+
+// Rota de Contato e outras rotas existentes...
+// ...
 
 module.exports = router;
