@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Status do Pagamento - Tool Utility</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <%- include('../partials/header') %>
+
+    <main class="container status-page-container">
+        
+        <% if (status === 'approved') { %>
+            <div class="status-box success">
+                <h1>✅ Pagamento Aprovado!</h1>
+                <p>Obrigado pela sua compra, <%= order.userId.name %>!</p>
+                <p>Seu pedido #<%= order._id %> foi recebido e já estamos preparando tudo para o envio.</p>
+                <p>Enviamos uma confirmação para o seu e-mail.</p>
+            </div>
+        <% } else if (status === 'pending') { %>
+            <div class="status-box pending">
+                <h1>⏳ Pagamento Pendente</h1>
+                <p>Seu pagamento está sendo processado. Isso pode levar alguns instantes.</p>
+                <p>Você será notificado por e-mail assim que o pagamento for aprovado.</p>
+                <p>Seu número de pedido é: #<%= order._id %></p>
+            </div>
+        <% } else { %>
+            <div class="status-box failure">
+                <h1>❌ Falha no Pagamento</h1>
+                <p>Houve um problema ao processar seu pagamento. Nenhum valor foi cobrado.</p>
+                <p>Por favor, tente novamente ou entre em contato com o suporte se o problema persistir.</p>
+            </div>
+        <% } %>
+
+        <a href="/account/orders" class="btn">Ver Meus Pedidos</a>
+        <a href="/" class="btn btn-secondary">Voltar para a Loja</a>
+
+    </main>
+
+    <%- include('../partials/footer') %>
+</body>
+</html>

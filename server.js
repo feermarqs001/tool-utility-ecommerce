@@ -21,7 +21,7 @@ const accountRoutes = require('./routes/account');
 const startServer = async () => {
     try {
         await mongoose.connect(process.env.MONGO_URI);
-        console.log("✅ Conexão com o MongoDB estabelecida com sucesso!");
+        console.log("✅ Mongo tá online pai!");
 
         const app = express();
 
@@ -82,7 +82,7 @@ const startServer = async () => {
         });
         
         const PORT = process.env.PORT || 3000;
-        app.listen(PORT, () => console.log(`🚀 Tool Utility a rodar na porta ${PORT}`));
+        app.listen(PORT, () => console.log(`🚀 Tool Utility metendo marcha na porta ${PORT}`));
 
     } catch (error) {
         console.error("❌ ERRO CRÍTICO AO INICIAR A APLICAÇÃO:", error);

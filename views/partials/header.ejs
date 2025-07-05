@@ -39,27 +39,24 @@
     
     <div class="nav-panel" id="navPanel">
         <nav class="main-nav">
-            <% if (locals.isAuthenticated) { %>
-                <div class="nav-user-info"><strong>Olá, <%= locals.userName %></strong></div>
-                <!-- =============================================== -->
-                <!-- =========== CORREÇÃO APLICADA AQUI ============ -->
-                <!-- =============================================== -->
-                <a href="/account">Minha Conta</a>
-                <a href="/account/orders">Meus Pedidos</a>
-                <!-- =============================================== -->
-                <hr>
-            <% } %>
-            <a href="/">Início</a>
-            <a href="/ofertas">Ofertas</a>
-            <a href="/checkout/cart">Carrinho</a>
-            <a href="/contato">Fale Conosco</a>
-            <hr>
-            <% if (locals.isAuthenticated) { %>
-                <a href="/auth/logout" class="nav-logout">Sair</a>
-            <% } else { %>
-                <a href="/auth/login">Login</a>
-                <a href="/auth/register">Cadastre-se</a>
-            <% } %>
+    <% if (locals.isAuthenticated) { %>
+        <div class="nav-user-info"><strong>Olá, <%= locals.userName %></strong></div>
+        <a href="/account">Minha Conta</a>
+        <a href="/account/orders">Meus Pedidos</a>
+        <hr>
+    <% } %>
+    <a href="/">Início</a>
+    
+    <a href="/offers">Ofertas</a>
+    <a href="/checkout/cart">Carrinho</a>
+    <a href="/contato">Fale Conosco</a>
+    <hr>
+    <% if (locals.isAuthenticated) { %>
+        <a href="/auth/logout" class="nav-logout">Sair</a>
+    <% } else { %>
+        <a href="/auth/login">Login</a>
+        <a href="/auth/register">Cadastre-se</a>
+    <% } %>
         </nav>
     </div>
     

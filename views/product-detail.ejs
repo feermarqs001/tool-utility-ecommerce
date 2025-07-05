@@ -27,9 +27,18 @@
 
             <div class="product-info">
                 <h1><%= product.name %></h1>
-                <p class="price">R$ <%= product.price.toFixed(2) %></p>
                 
-                <form action="/checkout/add-to-cart/<%= product._id %>" method="POST" style="margin-bottom: 20px;">
+                <div class="price-container-detail">
+                    <% if (product.onSale && product.salePrice > 0) { %>
+                        <span class="original-price-detail">R$ <%= product.price.toFixed(2) %></span>
+                        <span class="sale-price-detail">R$ <%= product.salePrice.toFixed(2) %></span>
+                    <% } else { %>
+                        <span class="product-price-detail">R$ <%= product.price.toFixed(2) %></span>
+                    <% } %>
+                </div>
+                
+                <form action="/checkout/add-to-cart" method="POST" style="margin-bottom: 20px;">
+                    <input type="hidden" name="productId" value="<%= product._id %>">
                     <div class="form-group-inline">
                         <label for="quantity">Quantidade:</label>
                         <input type="number" name="quantity" id="quantity" value="1" min="1" max="<%= product.stock %>" class="quantity-input">
@@ -39,7 +48,7 @@
                 
                 <div class="accordion-item">
                     <div class="accordion-header active">Descrição do Produto</div>
-                    <div class="accordion-content"><p style="padding: 15px 0; line-height: 1.7;"><%= product.description %></p></div>
+                    <div class="accordion-content" style="display: block;"><p style="padding: 15px 0; line-height: 1.7;"><%= product.description %></p></div>
                 </div>
 
                 <% if(product.specifications && product.specifications.size > 0) { %>
@@ -100,7 +109,25 @@
     <%- include('partials/footer') %>
 
     <script>
-        // ... (seu script existente) ...
+        // Pequeno script para a galeria de imagens e accordion
+        function changeImage(thumb, url) {
+            document.getElementById('mainProductImage').src = url;
+            const thumbnails = document.querySelectorAll('.thumbnails img');
+            thumbnails.forEach(t => t.classList.remove('active'));
+            thumb.classList.add('active');
+        }
+
+        document.querySelectorAll('.accordion-header').forEach(header => {
+            header.addEventListener('click', () => {
+                header.classList.toggle('active');
+                const content = header.nextElementSibling;
+                if (content.style.display === 'block') {
+                    content.style.display = 'none';
+                } else {
+                    content.style.display = 'block';
+                }
+            });
+        });
     </script>
 </body>
 </html>

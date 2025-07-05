@@ -20,8 +20,8 @@
         <main class="content">
             <h2 class="section-title">Nossos Produtos</h2>
             <div class="product-grid">
-                <% if(locals.products && products.length > 0) { %>
-                    <% products.forEach(function(product) { %>
+                <% if(locals.featuredProducts && featuredProducts.length > 0) { %>
+                    <% featuredProducts.forEach(function(product) { %>
                         <div class="product-card">
                             <a href="/product/<%= product._id %>" class="product-image-container">
                                 <img src="<%= (product.imageUrls && product.imageUrls.length > 0) ? product.imageUrls[0] : 'https://via.placeholder.com/300?text=Sem+Imagem' %>" alt="<%= product.name %>">
@@ -43,11 +43,12 @@
                                     <span>Frete Grátis</span>
                                 </div>
                             </div>
-                            <form action="/checkout/add-to-cart/<%= product._id %>" method="POST" style="margin-top: 15px;">
+                            <form action="/checkout/add-to-cart" method="POST">
+                                <input type="hidden" name="productId" value="<%= product._id %>">
+                                <input type="hidden" name="quantity" value="1">
                                 <button type="submit" class="btn">Adicionar ao Carrinho</button>
                             </form>
-                        </div>
-                    <% }); %>
+                        </div> <% }); %>
                 <% } else { %>
                     <p>Nenhum produto encontrado.</p>
                 <% } %>

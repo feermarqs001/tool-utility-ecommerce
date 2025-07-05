@@ -10,11 +10,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <%- include('partials/header') %>
+    <%- include('../partials/header') %>
 
     <main class="container cart-container">
         <h1>Seu Carrinho de Compras</h1>
-        <%- include('partials/flash-messages') %>
+        <%- include('../partials/flash-messages') %>
         <hr style="margin: 20px 0;">
 
         <% if (cart && cart.length > 0) { %>
@@ -89,6 +89,6 @@
         <% } %>
     </main>
 
-    <%- include('partials/footer') %>
+    <%- include('../partials/footer') %>
 </body>
 </html>

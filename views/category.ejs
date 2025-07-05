@@ -50,7 +50,11 @@
                                     <span>Frete Grátis</span>
                                 </div>
                             </div>
-                            <form action="/checkout/add-to-cart/<%= product._id %>" method="POST" style="margin-top: 15px;"><button type="submit" class="btn">Adicionar ao Carrinho</button></form>
+                            <form action="/checkout/add-to-cart" method="POST" style="margin-top: 15px;">
+                                <input type="hidden" name="productId" value="<%= product._id %>">
+                                <input type="hidden" name="quantity" value="1">
+                                <button type="submit" class="btn">Adicionar ao Carrinho</button>
+                            </form>
                         </div>
                     <% }); %>
                 <% } else { %>

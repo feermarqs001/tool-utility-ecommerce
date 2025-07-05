@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
+const { body, validationResult } = require('express-validator'); // [NOVO] Importando o validator
 const User = require('../models/User');
 
-// --- Função para validar o formato do CPF ---
+// --- Função utilitária para validar o formato do CPF (movida para cá para manter o arquivo autocontido) ---
 function isCpfValid(cpf) {
     cpf = String(cpf).replace(/[^\d]+/g, '');
     if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
@@ -26,16 +27,40 @@ router.get('/register', (req, res) => {
     res.render('register', { pageTitle: 'Cadastre-se' });
 });
 
-// ROTA PARA PROCESSAR O CADASTRO (COM TODAS AS VALIDAÇÕES)
-router.post('/register', async (req, res) => {
-    const { name, email, password, cpf, telephone, street, number, complement, neighborhood, city, state, zipCode } = req.body;
+// ROTA PARA PROCESSAR O CADASTRO (COM VALIDAÇÃO)
+router.post('/register', [
+    // --- [NOVO] Bloco de Validação e Sanitização ---
+    body('name', 'O nome é obrigatório e precisa ter no mínimo 3 caracteres.').trim().isLength({ min: 3 }),
+    body('email', 'Por favor, insira um email válido.').isEmail().normalizeEmail(),
+    body('password', 'A senha precisa ter no mínimo 6 caracteres.').isLength({ min: 6 }),
+    body('cpf', 'O CPF informado não é válido.').trim().custom(isCpfValid),
+    body('telephone', 'O telefone é obrigatório.').trim().notEmpty(),
+    body('street', 'O nome da rua é obrigatório.').trim().notEmpty(),
+    body('number', 'O número é obrigatório.').trim().notEmpty(),
+    body('neighborhood', 'O bairro é obrigatório.').trim().notEmpty(),
+    body('city', 'A cidade é obrigatória.').trim().notEmpty(),
+    body('state', 'O estado é obrigatório.').trim().notEmpty(),
+    body('zipCode', 'O CEP é obrigatório.').trim().isPostalCode('BR').withMessage('O CEP informado não é válido.')
+
+], async (req, res) => {
     
-    if (!isCpfValid(cpf)) {
-        req.flash('error_msg', 'O CPF informado não é válido.');
-        return res.redirect('/auth/register');
+    // --- [NOVO] Checa os resultados da validação ---
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        const errorMessages = errors.array().map(err => err.msg);
+        req.flash('error_msg', errorMessages.join(', '));
+        // [NOVO] Redireciona de volta com os dados preenchidos para não frustrar o usuário
+        return res.status(400).render('register', {
+            pageTitle: 'Cadastre-se',
+            errors: errors.array(),
+            formData: req.body // Enviando os dados de volta para o formulário
+        });
     }
 
     try {
+        const { name, email, password, cpf, telephone, street, number, complement, neighborhood, city, state, zipCode } = req.body;
+
+        // A verificação de CPF já foi feita na validação, mas a de email é bom manter pelo acesso ao DB
         let user = await User.findOne({ email: email });
         if (user) {
             req.flash('error_msg', 'Este email já está em uso.');
@@ -52,10 +77,7 @@ router.post('/register', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, salt);
 
         user = new User({
-            name,
-            email,
-            cpf,
-            telephone,
+            name, email, cpf, telephone,
             password: hashedPassword,
             address: { street, number, complement, neighborhood, city, state, zipCode }
         });
@@ -63,13 +85,10 @@ router.post('/register', async (req, res) => {
         await user.save();
         req.flash('success_msg', 'Cadastro realizado com sucesso! Por favor, faça o login.');
         res.redirect('/auth/login');
+
     } catch (error) {
-        if (error.name === 'ValidationError') {
-            const messages = Object.values(error.errors).map(val => val.message);
-            req.flash('error_msg', messages.join(', '));
-        } else {
-            req.flash('error_msg', 'Ocorreu um erro inesperado no registro.');
-        }
+        console.error("Erro ao registrar usuário:", error);
+        req.flash('error_msg', 'Ocorreu um erro inesperado no registro.');
         res.redirect('/auth/register');
     }
 });
@@ -80,7 +99,19 @@ router.get('/login', (req, res) => {
 });
 
 // ROTA PARA PROCESSAR O LOGIN
-router.post('/login', async (req, res) => {
+router.post('/login', [
+    // --- [NOVO] Validação básica para o login ---
+    body('email', 'Por favor, insira um email válido.').isEmail().normalizeEmail(),
+    body('password', 'O campo senha não pode estar em branco.').notEmpty()
+
+], async (req, res) => {
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        req.flash('error_msg', 'Email ou senha inválidos.');
+        return res.redirect('/auth/login');
+    }
+
     const { email, password } = req.body;
     try {
         const user = await User.findOne({ email });
@@ -95,27 +126,33 @@ router.post('/login', async (req, res) => {
             return res.redirect('/auth/login');
         }
 
-        // Salva os dados importantes na sessão
         req.session.isAuthenticated = true;
         req.session.userId = user._id;
         req.session.userName = user.name;
-        req.session.userRole = user.role; // Essencial para o acesso de admin
+        req.session.userRole = user.role;
         
+        // [NOVO] Redireciona para o admin se o usuário for admin
+        if(user.role === 'admin') {
+            return res.redirect('/admin');
+        }
         res.redirect('/');
+
     } catch (error) {
+        console.error("Erro no login:", error);
         req.flash('error_msg', 'Ocorreu um erro no servidor.');
         res.redirect('/auth/login');
     }
 });
 
 // ROTA PARA FAZER LOGOUT
-router.get('/logout', (req, res) => {
+router.get('/logout', (req, res, next) => { // [NOVO] Adicionado 'next' para o tratamento de erro
     req.session.destroy(err => {
         if (err) {
             console.error("Erro ao fazer logout:", err);
+            req.flash('error_msg', 'Não foi possível fazer o logout. Tente novamente.');
             return res.redirect('/');
         }
-        res.clearCookie('connect.sid');
+        res.clearCookie('connect.sid'); // Limpa o cookie da sessão
         res.redirect('/');
     });
 });

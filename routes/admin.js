@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { body, param, validationResult } = require('express-validator');
 const isAuthenticated = require('../middleware/isAuthenticated');
 const isAdmin = require('../middleware/isAdmin');
 
@@ -8,16 +9,15 @@ const Product = require('../models/Product');
 const Order = require('../models/Order');
 const User = require('../models/User');
 const Coupon = require('../models/Coupon');
-const Review = require('../models/Review'); // NOVO
-const ShippingConfig = require('../models/ShippingConfig'); // NOVO
+const Review = require('../models/Review');
+const ShippingConfig = require('../models/ShippingConfig');
 
 // Aplica a segurança a TODAS as rotas de admin
 router.use(isAuthenticated, isAdmin);
 
 // --- ROTA PRINCIPAL: DASHBOARD ---
-router.get('/', async (req, res) => {
+router.get('/', async (req, res, next) => {
     try {
-        // [NOVO] Lógica para dados dos gráficos
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
@@ -29,7 +29,7 @@ router.get('/', async (req, res) => {
             }},
             { $sort: { _id: 1 } }
         ]);
-
+        
         const [productCount, orderCount, userCount, recentOrders] = await Promise.all([
             Product.countDocuments(),
             Order.countDocuments({ status: 'Pago' }),
@@ -40,102 +40,216 @@ router.get('/', async (req, res) => {
         res.render('admin/dashboard', {
             pageTitle: 'Dashboard',
             productCount, orderCount, userCount, recentOrders,
-            salesData // Enviando dados para o gráfico
+            salesData
         });
     } catch (error) {
-        res.status(500).send("Erro ao carregar o dashboard.");
+        console.error("Erro ao carregar o dashboard de admin:", error);
+        next(error); 
     }
 });
 
-// --- ROTAS DE PRODUTOS (CRUD ATUALIZADO) ---
-// Rota de listar (sem mudanças)
-router.get('/products', async (req, res) => { /* ...código existente... */ });
-// Rota para form de adicionar (sem mudanças)
-router.get('/products/add', (req, res) => { /* ...código existente... */ });
+// --- REGRAS DE VALIDAÇÃO REUTILIZÁVEIS PARA PRODUTOS ---
+const productValidationRules = [
+    body('name', 'O nome do produto é obrigatório.').trim().notEmpty(),
+    body('description', 'A descrição é obrigatória.').trim().notEmpty(),
+    body('price', 'O preço deve ser um número válido.').isFloat({ gt: 0 }).toFloat(),
+    body('category', 'A categoria é obrigatória.').trim().notEmpty(),
+    body('stock', 'O estoque deve ser um número inteiro.').isInt({ min: 0 }).toInt(),
+    body('imageUrls', 'Forneça ao menos uma URL de imagem.').trim().notEmpty(),
+    body('weight', 'O peso deve ser um número válido.').optional({ checkFalsy: true }).isFloat({ gt: 0 }).toFloat(),
+    body('length', 'O comprimento deve ser um número válido.').optional({ checkFalsy: true }).isFloat({ gt: 0 }).toFloat(),
+    body('width', 'A largura deve ser um número válido.').optional({ checkFalsy: true }).isFloat({ gt: 0 }).toFloat(),
+    body('height', 'A altura deve ser um número válido.').optional({ checkFalsy: true }).isFloat({ gt: 0 }).toFloat(),
+    body('salePrice', 'O preço promocional deve ser um número.').optional({ checkFalsy: true }).isFloat().toFloat()
+];
 
-// Processar adição (ATUALIZADO com peso/dimensões)
-router.post('/products/add', async (req, res) => {
+// --- ROTAS DE PRODUTOS ---
+router.get('/products', async (req, res, next) => {
     try {
-        // [NOVO] Pegando os campos de peso e dimensões
-        const { name, description, price, category, stock, imageUrls, specifications, onSale, salePrice, weight, length, width, height } = req.body;
-        
-        const newProduct = new Product({ 
-            name, description, price, category, stock, onSale: onSale === 'on', salePrice: salePrice || null,
-            imageUrls: imageUrls ? imageUrls.split('\n').map(url => url.trim()).filter(url => url) : [],
-            specifications: new Map(), // Lógica de specs existente
-            // [NOVO] Salvando peso e dimensões
+        const products = await Product.find().sort({ createdAt: -1 });
+        res.render('admin/products', { pageTitle: 'Gerenciar Produtos', products });
+    } catch (error) {
+        next(error);
+    }
+});
+
+router.get('/products/add', (req, res) => {
+    res.render('admin/add-product', { pageTitle: 'Adicionar Produto' });
+});
+
+router.post('/products/add', productValidationRules, async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        req.flash('error_msg', errors.array().map(e => e.msg).join(', '));
+        return res.status(400).redirect('/admin/products/add');
+    }
+
+    try {
+        const { name, description, price, category, stock, imageUrls, onSale, salePrice, weight, length, width, height } = req.body;
+        await Product.create({ 
+            name, description, price, category, stock, 
+            onSale: !!onSale,
+            salePrice: !!onSale ? salePrice : null,
+            imageUrls: imageUrls.split('\n').map(url => url.trim()).filter(Boolean),
             weight, 
             dimensions: { length, width, height }
         });
-        await newProduct.save();
         req.flash('success_msg', 'Produto criado com sucesso!');
         res.redirect('/admin/products');
     } catch (error) {
-        // [NOVO] Tratamento de erro de validação mais específico
-        if (error.name === 'ValidationError') {
-            const messages = Object.values(error.errors).map(val => val.message);
-            req.flash('error_msg', messages.join(', '));
-        } else {
-            req.flash('error_msg', 'Erro ao salvar produto.');
-        }
+        req.flash('error_msg', 'Erro ao salvar produto. Verifique se os dados estão corretos.');
         res.redirect('/admin/products/add');
     }
 });
 
-// Rota para form de editar (sem mudanças)
-router.get('/products/edit/:id', async (req, res) => { /* ...código existente... */ });
-
-// Processar edição (ATUALIZADO com peso/dimensões)
-router.post('/products/edit/:id', async (req, res) => {
+router.get('/products/edit/:id', [param('id').isMongoId()], async (req, res, next) => {
     try {
         const product = await Product.findById(req.params.id);
-        if (!product) { return res.status(404).send("Produto não encontrado."); }
-        
-        const { name, description, price, category, stock, imageUrls, onSale, salePrice, weight, length, width, height } = req.body;
-        
-        // [NOVO] Atualizando os campos de peso e dimensões
-        product.weight = weight;
-        product.dimensions.length = length;
-        product.dimensions.width = width;
-        product.dimensions.height = height;
+        if (!product) {
+            req.flash('error_msg', 'Produto não encontrado.');
+            return res.redirect('/admin/products');
+        }
+        res.render('admin/edit-product', { pageTitle: `Editar: ${product.name}`, product });
+    } catch (error) {
+        next(error);
+    }
+});
 
-        // ... resto do código de atualização ...
-        await product.save();
+router.post('/products/edit/:id', [param('id').isMongoId(), ...productValidationRules], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        req.flash('error_msg', errors.array().map(e => e.msg).join(', '));
+        return res.status(400).redirect(`/admin/products/edit/${req.params.id}`);
+    }
+
+    try {
+        const { name, description, price, category, stock, imageUrls, onSale, salePrice, weight, length, width, height } = req.body;
+        await Product.findByIdAndUpdate(req.params.id, {
+            name, description, price, category, stock,
+            onSale: !!onSale,
+            salePrice: !!onSale ? salePrice : null,
+            imageUrls: imageUrls.split('\n').map(url => url.trim()).filter(Boolean),
+            weight,
+            dimensions: { length, width, height }
+        });
         req.flash('success_msg', 'Produto atualizado com sucesso!');
         res.redirect('/admin/products');
     } catch (error) {
-        // [NOVO] Tratamento de erro de validação
-        if (error.name === 'ValidationError') {
-            const messages = Object.values(error.errors).map(val => val.message);
-            req.flash('error_msg', messages.join(', '));
-        } else {
-            req.flash('error_msg', 'Erro ao atualizar produto.');
-        }
+        req.flash('error_msg', 'Erro ao atualizar produto.');
         res.redirect(`/admin/products/edit/${req.params.id}`);
     }
 });
 
-// Rota de deletar (sem mudanças)
-router.post('/products/delete/:id', async (req, res) => { /* ...código existente... */ });
-
-
-// --- [NOVO] ROTAS DE CONFIGURAÇÃO DE FRETE ---
-router.get('/shipping', async (req, res) => {
+router.post('/products/delete/:id', [param('id').isMongoId()], async (req, res) => {
     try {
-        const config = await ShippingConfig.getConfig();
-        res.render('admin/shipping', { pageTitle: 'Configurar Frete', config });
+        await Product.findByIdAndDelete(req.params.id);
+        req.flash('success_msg', 'Produto deletado com sucesso.');
+        res.redirect('/admin/products');
     } catch (error) {
-        res.status(500).send("Erro ao carregar configurações de frete.");
+        req.flash('error_msg', 'Erro ao deletar produto.');
+        res.redirect('/admin/products');
     }
 });
 
-router.post('/shipping', async (req, res) => {
+// --- ROTAS DE PEDIDOS ---
+router.get('/orders', async (req, res, next) => {
+    try {
+        const orders = await Order.find().sort({ createdAt: -1 }).populate('userId', 'name');
+        res.render('admin/orders', { 
+            pageTitle: 'Gerenciar Pedidos', 
+            orders: orders 
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+// --- ROTAS DE CUPONS (CRUD COMPLETO) ---
+router.get('/coupons', async (req, res, next) => {
+    try {
+        const coupons = await Coupon.find().sort({ createdAt: -1 });
+        res.render('admin/coupons', { 
+            pageTitle: 'Gerenciar Cupons', 
+            coupons: coupons 
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+router.get('/coupons/add', (req, res) => {
+    res.render('admin/add-coupon', { pageTitle: 'Adicionar Cupom' });
+});
+
+router.post('/coupons/add', [
+    body('code', 'O código do cupom é obrigatório').trim().notEmpty(),
+    body('discountType', 'Selecione o tipo de desconto').isIn(['Percentage', 'Fixed']),
+    body('discountValue', 'O valor do desconto é obrigatório e deve ser um número').isFloat({ gt: 0 }),
+    body('expiryDate', 'A data de expiração é obrigatória').isISO8601().toDate()
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        req.flash('error_msg', errors.array().map(e => e.msg).join(', '));
+        return res.status(400).redirect('/admin/coupons/add');
+    }
+
+    try {
+        await Coupon.create(req.body);
+        req.flash('success_msg', 'Cupom criado com sucesso!');
+        res.redirect('/admin/coupons');
+    } catch (error) {
+        req.flash('error_msg', 'Erro ao criar cupom. O código já pode existir.');
+        res.redirect('/admin/coupons/add');
+    }
+});
+
+router.post('/coupons/delete/:id', [param('id').isMongoId()], async (req, res) => {
+    try {
+        await Coupon.findByIdAndDelete(req.params.id);
+        req.flash('success_msg', 'Cupom deletado com sucesso.');
+        res.redirect('/admin/coupons');
+    } catch (error) {
+        req.flash('error_msg', 'Erro ao deletar cupom.');
+        res.redirect('/admin/coupons');
+    }
+});
+
+// --- ROTAS DE USUÁRIOS ---
+router.get('/users', async (req, res, next) => {
+    try {
+        const users = await User.find().sort({ createdAt: -1 });
+        res.render('admin/users', { 
+            pageTitle: 'Gerenciar Usuários', 
+            users: users 
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+// --- ROTAS DE CONFIGURAÇÃO DE FRETE ---
+router.get('/shipping', async (req, res, next) => {
+    try {
+        const config = await ShippingConfig.findOne();
+        res.render('admin/shipping', { pageTitle: 'Configurar Frete', config: config || {} });
+    } catch (error) {
+        next(error);
+    }
+});
+
+router.post('/shipping', [
+    body('localCity', 'A cidade para entrega local é obrigatória.').trim().notEmpty(),
+    body('localCost', 'O custo local deve ser um número.').isFloat({ min: 0 }).toFloat()
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        req.flash('error_msg', errors.array().map(e => e.msg).join(', '));
+        return res.status(400).redirect('/admin/shipping');
+    }
+
     try {
         const { localCity, localCost } = req.body;
-        const config = await ShippingConfig.getConfig();
-        config.localCity = localCity;
-        config.localCost = localCost;
-        await config.save();
+        await ShippingConfig.findOneAndUpdate({}, { localCity, localCost }, { upsert: true, new: true, setDefaultsOnInsert: true });
         req.flash('success_msg', 'Configurações de frete salvas com sucesso!');
         res.redirect('/admin/shipping');
     } catch (error) {
@@ -144,18 +258,24 @@ router.post('/shipping', async (req, res) => {
     }
 });
 
-
-// --- [NOVO] ROTAS DE MODERAÇÃO DE AVALIAÇÕES ---
-router.get('/reviews', async (req, res) => {
+// --- ROTAS DE MODERAÇÃO DE AVALIAÇÕES ---
+router.get('/reviews', async (req, res, next) => {
     try {
-        const reviews = await Review.find().sort({ createdAt: -1 }).populate('productId', 'name');
+        const reviews = await Review.find().sort({ createdAt: -1 }).populate('productId', 'name').populate('userId', 'name');
         res.render('admin/reviews', { pageTitle: 'Moderar Avaliações', reviews });
     } catch (error) {
-        res.status(500).send("Erro ao carregar avaliações.");
+        next(error);
     }
 });
 
-router.post('/reviews/approve/:id', async (req, res) => {
+const reviewIdValidation = [ param('id', 'ID da avaliação inválido.').isMongoId() ];
+
+router.post('/reviews/approve/:id', reviewIdValidation, async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        req.flash('error_msg', 'ID de avaliação inválido.');
+        return res.status(400).redirect('/admin/reviews');
+    }
     try {
         await Review.findByIdAndUpdate(req.params.id, { isApproved: true });
         req.flash('success_msg', 'Avaliação aprovada com sucesso.');
@@ -166,7 +286,12 @@ router.post('/reviews/approve/:id', async (req, res) => {
     }
 });
 
-router.post('/reviews/delete/:id', async (req, res) => {
+router.post('/reviews/delete/:id', reviewIdValidation, async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        req.flash('error_msg', 'ID de avaliação inválido.');
+        return res.status(400).redirect('/admin/reviews');
+    }
     try {
         await Review.findByIdAndDelete(req.params.id);
         req.flash('success_msg', 'Avaliação deletada com sucesso.');
@@ -176,8 +301,5 @@ router.post('/reviews/delete/:id', async (req, res) => {
         res.redirect('/admin/reviews');
     }
 });
-
-// --- ROTAS DE PEDIDOS, USUÁRIOS E CUPONS (sem grandes mudanças, apenas o código existente) ---
-// ...
 
 module.exports = router;
